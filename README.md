@@ -15,7 +15,7 @@ Los estudiantes deben entregar un Ray Caster simple (usando PyGame o SDL) que re
 ![](Screenshot_3.png)
 
 ## Screenshot 4
-![](Screenshot_3.png)
+![](Screenshot_4.png)
 
 ## Screenshot 5
-![](Screenshot_3.png)
+![](Screenshot_5.png)
