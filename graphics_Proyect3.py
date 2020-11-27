@@ -28,22 +28,22 @@ wall5 = pygame.image.load('./sprites/wall5.png')
 enemies = [
   {
     "x": 100,
-    "y": 200,
+    "y": 190,
     "texture": pygame.image.load('./sprites/mob1.png')
   },
   {
-    "x": 280,
-    "y": 190,
+    "x": 400,
+    "y": 220,
     "texture": pygame.image.load('./sprites/mob2.png')
   },
   {
-    "x": 225,
-    "y": 340,
+    "x": 125,
+    "y": 330,
     "texture": pygame.image.load('./sprites/mob3.png')
   },
   {
-    "x": 220,
-    "y": 425,
+    "x": 400,
+    "y": 325,
     "texture": pygame.image.load('./sprites/mob4.png')
   }
 ]
@@ -63,15 +63,18 @@ black = (0,0,0)
 random_color = (0,155,255)
 face = pygame.image.load('./sprites/face.png')
 zero = pygame.image.load('./sprites/0.png')
-two = pygame.image.load('./sprites/0.png')
-three = pygame.image.load('./sprites/1.png')
+two = pygame.image.load('./sprites/2.png')
+three = pygame.image.load('./sprites/3.png')
 music_meter = pygame.image.load('./sprites/nostalgia.png')
+#size of the enemies divided by the blocksize
+aspect_ratio = 128/50
 #size of the tiles divided by the blocksize
-aspect_ratio = 101/50
-#
+sprite = 128
+#tiles_ratio_width = 100/50
+#tiles_ratio_height = 98/50
 #
 #menu screen props
-logo = pygame.image.load('./sprites/megaman_log.png')
+logo = pygame.image.load('./sprites/megaman_logo.png')
 
 class Raycaster:
     def __init__(self, screen):
@@ -79,13 +82,15 @@ class Raycaster:
         self.screen = screen
         self.blocksize = 50
         self.map = []
-
+        #
         self.player = {
             "x": self.blocksize + 25,
             "y": self.blocksize + 25,
+            "j": 0,
             "a": 0,
             "fov": pi/3
         }
+        #map atributes
         self.zbuffer = [-float('inf') for z in range(0, 500)]
 
     def point(self, x, y, c):
@@ -94,10 +99,21 @@ class Raycaster:
     def draw_rectangle(self, x, y, texture):
         for cx in range(x, x + self.blocksize):
             for cy in range(y, y + self.blocksize):
-                tx = int((cx - x) * aspect_ratio) 
-                ty = int((cy - y) * aspect_ratio)
+                tx = int((cx - x)*aspect_ratio)
+                ty = int((cy - y)*aspect_ratio)
                 c = texture.get_at((tx, ty))
-                self.point(cx, cy, c) 
+                self.point(cx, cy, c)
+
+    def draw_stake(self, x, h, texture, tx):
+        start = int(250 - h*0.5) + self.player["j"]
+        end = int(250 + h*0.5)
+        for y in range(start, end):
+            #modificador de la altura
+            ty = int(((y - start)*sprite)/(end - start))
+            c = texture.get_at((tx, ty))
+            #^ mejorar la resolucion de cada sprite y tile
+            self.point(x, y, c)
+
 
     def load_map(self, filename):
         with open(filename) as f:
@@ -128,19 +144,13 @@ class Raycaster:
             self.point(int(x),int(y), white)
             d += 1
 
-    def draw_stake(self, x, h, texture, tx):
-        start = int(250 - h/2)
-        end = int(250 + h/2)
-        for y in range(start, end):
-            ty = int(((y - start)*128)/(end - start))
-            c = texture.get_at((tx, ty))
-            self.point(x, y, c)
+    
     
     def draw_sprite(self, sprite):
         sprite_a = atan2(sprite["y"] - self.player["y"], sprite["x"] - self.player["x"])
 
         sprite_d = ((self.player["x"] - sprite["x"])**2 + (self.player["y"] - sprite["y"])**2)**0.5
-        sprite_size = (500/sprite_d) * 70
+        sprite_size = (500/sprite_d) * 75
 
         sprite_x = 500 + (sprite_a - self.player["a"]) * 500/self.player["fov"] + 250 - sprite_size/2
         sprite_y = 250 - sprite_size/2
@@ -161,42 +171,47 @@ class Raycaster:
                         self.point(x,y,c)
                         self.zbuffer[x - 500] = sprite_d
 
-    def draw_Hud(self,xi,yi, w = 500, h = 100):
+    def draw_Hud(self,xi,yi, w = 515, h = 128):
         for x in range(xi, xi + w):
             for y in range(yi, yi + h):
-                tx = int((x - xi) * 600/w)
-                ty = int((y - yi) * 90/h)
+                tx = int((x - xi) * 128/w)
+                ty = int((y - yi) * 128/h)
                 c = hud.get_at((tx, ty))
                 self.point(x,y,c)
     
-    def draw_Face(self,xi,yi, w = 64, h = 84):
+    def draw_Face(self,xi,yi, w = 128, h = 128):
         for x in range(xi, xi + w):
             for y in range(yi, yi + h):
-                tx = int((x - xi) * 104/w)
-                ty = int((y - yi) * 114/h)
+                tx = int((x - xi) * 128/w)
+                ty = int((y - yi) * 128/h)
                 c = face.get_at((tx, ty))
-                if c != (20,20,20)
+                if c != (0,0,0):
                     self.point(x,y,c)
 
-    def draw_player(self, xi, yi, w = 256, h = 256):
+    def numbers_Mason(self,number,xi,yi, w = 28, h = 28):
         for x in range(xi, xi + w):
             for y in range(yi, yi + h):
-                tx = int((x - xi) * 32/w)
-                ty = int((y - yi) * 32/h)
+                tx = int((x - xi) * 128/w)
+                ty = int((y - yi) * 128/h)
+                c = number.get_at((tx, ty))
+                self.point(x,y,c)
+
+    def draw_player(self, xi, yi, w = 128, h = 128):
+        for x in range(xi, xi + w):
+            for y in range(yi, yi + h):
+                tx = int((x - xi) * 128/w)
+                ty = int((y - yi) * 128/h)
                 c = hand.get_at((tx, ty))
-                self.point(x, y, c)
+                if c != (237,28,36):
+                    self.point(x,y,c)
                 #esto sirve para no colorear lo morado de las imagenes
                 #explicado en clase
                 #if c != (152, 0, 136, 255):
                 
 
-    def show_fps(clock,screen):
-        string = "FPS: " + str(int(clock.get_fps()))
-        font = pygame.font.SysFont('Arial', 10, True)
-        fps = font.render(string,0,white)
-        screen.blit(fps, (150,5))
 
     def render(self):
+        #map, still pending for minimap
         for x in range(0, 500, self.blocksize):
             for y in range(0, 500, self.blocksize):
                 i = int(x/self.blocksize)
@@ -209,9 +224,8 @@ class Raycaster:
         for i in range(0,500):
             a = self.player["a"] - self.player["fov"]/2 + i * self.player["fov"]/500
             d, c, tx = self.cast_ray(a)
-
             x = 500 + i
-            h = 500/(d* cos(a- self.player["a"])) * 100
+            h = 500/(d* cos(a- self.player["a"])) * 50
             self.draw_stake(x, h, textures[c], tx)
             self.zbuffer[i] = d
         
@@ -219,9 +233,12 @@ class Raycaster:
             self.point(enemy["x"], enemy["y"],black)
             self.draw_sprite(enemy)
         
-        self.draw_player(1000 - 256 - 128, 500 - 256)
-        self.draw_Hud(510,0)
-        self.draw_Face(737,7)
+        self.draw_player(815, 250)
+        self.draw_Hud(500,380)
+        self.draw_Face(880,376)
+        self.numbers_Mason(zero,640,462)
+        self.numbers_Mason(two,610,462)
+        self.numbers_Mason(three,580,462)
 
 def text_objects(text, font):
     textSurface = font.render(text, True, black)
@@ -230,6 +247,9 @@ def text_objects(text, font):
 
 def main_menu():
     #Sacado de https://pythonprogramming.net/pygame-start-menu-tutorial/
+    menu_background = pygame.image.load('./sprites/megaman_logo.png')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.4)
     start = False
     while start == False:
         for event in pygame.event.get():
@@ -239,15 +259,22 @@ def main_menu():
                 if event.key == pygame.K_RETURN:
                     start = True
         screen.fill(random_color)
+        screen.blit(menu_background, (425,75))
         largeText = pygame.font.Font('freesansbold.ttf', 50)
-        TextSurf, TextRect = text_objects("Please press enter to kill Nazis!", largeText)
-        TextRect.center = (500,250)
+        TextSurf, TextRect = text_objects("Press Enter to start!", largeText) 
+        TextRect.center = (500,250)        
         screen.blit(TextSurf,TextRect)
+        TextSurf2, TextRect2 = text_objects("Shoot with Z. Move with Arrow keys!", largeText) 
+        TextRect2.center = (500,350)        
+        screen.blit(TextSurf2,TextRect2)
         pygame.display.update()
         clock = pygame.time.Clock()
         clock.tick(15)
 
 def win_screen():
+    win_background = pygame.image.load('./sprites/endingbg.jpg')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.4)
     start = False
     while start == False:
         for event in pygame.event.get():
@@ -257,25 +284,49 @@ def win_screen():
                 if event.key == pygame.K_RETURN:
                     start = True
         screen.fill(random_color)
+        screen.blit(win_background, (0,0))
         largeText = pygame.font.Font('freesansbold.ttf', 50)
-        TextSurf, TextRect = text_objects("Thanks again for your time!", largeText)
+        TextSurf, TextRect = text_objects("Game on!", largeText)
         TextRect.center = (500,250)
         screen.blit(TextSurf,TextRect)
         pygame.display.update()
         clock = pygame.time.Clock()
         clock.tick(15)
 
+def show_fps(clock,screen):
+        string = "FPS: " + str(int(clock.get_fps()))
+        font = pygame.font.SysFont('Arial', 20, True)
+        fps = font.render(string,0,white)
+        screen.blit(fps, (950,5))
+
 pygame.init()
+#music
+pygame.mixer.init()
 screen = pygame.display.set_mode((1000, 500))
 raymap = Raycaster(screen)
 raymap.load_map('map.txt')
-
-
+#camera shaking when moving
+camera_movement = 0
+#first music load in the menu
+pygame.mixer.music.load('./music_sound_effects/title.mp3')
+#Menu with intro
 main_menu()
+#second music load in the ingame
+pygame.mixer.music.load('./music_sound_effects/theme.mp3')
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.4)
+
+#megaman X without the clasic shot isn't megaman X
+shoot_sound = pygame.mixer.Sound('./music_sound_effects/MMX01.wav')
+#charging_sound = pygame.mixer.Sound('./music_sound_effects/MMX02.wav')
+#loopcharging_sound = pygame.mixer.Sound('./music_sound_effects/MMX02A.wav')
+#charge_shot = pygame.mixer.Sound('./music_sound_effects/MMX03.wav')
 # Loop para que continue el juego
 while True:
     #cantidad de pixeles por movimiento
     d = 10
+    #camara 
+    camera_movement += 5
     screen.fill(black)
 
     for e in pygame.event.get():
@@ -290,15 +341,29 @@ while True:
             if e.key == pygame.K_UP:
                 raymap.player["x"] += int(d * cos(raymap.player["a"]))
                 raymap.player["y"] += int(d * sin(raymap.player["a"]))
+                #camera movememt when moving.
+                raymap.player["j"] = int( cos(camera_movement) * 10)
+                
             if e.key == pygame.K_DOWN:
                 raymap.player["x"] -= int(d * cos(raymap.player["a"]))
                 raymap.player["y"] -= int(d * sin(raymap.player["a"]))
-    #evento cuando se acerca al trofeo
-    if(350<raymap.player["x"]<375 and 250<raymap.player["y"]<275):
-        break
-                
-    
-    raymap.render()
-    pygame.display.flip()
+                #camera movement backwards
+                raymap.player["j"] = int( cos(camera_movement) * 10)
 
+            if e.key == pygame.K_z:
+                shoot_sound.play()
+        
+
+
+
+
+    #evento cuando se acerca al tile de la x
+    if(335<raymap.player["x"]<400 and 399<raymap.player["y"]<427):
+        break
+    raymap.render()
+    show_fps(CLOCK,screen)
+    pygame.display.flip()
+    CLOCK.tick(60)
+#win screen with ending theme
+pygame.mixer.music.load('./music_sound_effects/ending.mp3')
 win_screen()
