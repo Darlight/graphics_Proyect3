@@ -261,12 +261,16 @@ def main_menu():
         screen.fill(random_color)
         screen.blit(menu_background, (425,75))
         largeText = pygame.font.Font('freesansbold.ttf', 50)
+        smallText = pygame.font.Font('freesansbold.ttf', 30)
         TextSurf, TextRect = text_objects("Press Enter to start!", largeText) 
         TextRect.center = (500,250)        
         screen.blit(TextSurf,TextRect)
         TextSurf2, TextRect2 = text_objects("Shoot with Z. Move with Arrow keys!", largeText) 
         TextRect2.center = (500,350)        
         screen.blit(TextSurf2,TextRect2)
+        TextSurf3, TextRect3 = text_objects("Move camera with mouse on left or right in the right screen.", smallText) 
+        TextRect3.center = (500,450)        
+        screen.blit(TextSurf3,TextRect3)
         pygame.display.update()
         clock = pygame.time.Clock()
         clock.tick(15)
@@ -352,6 +356,12 @@ while True:
 
             if e.key == pygame.K_z:
                 shoot_sound.play()
+        if e.type == pygame.MOUSEMOTION:
+            mouse_pos = pygame.mouse.get_pos()
+            if mouse_pos[0] in list(range(500, 750)):
+                raymap.player["a"] -= pi/20
+            elif mouse_pos[0] in list(range(750, 1000)):
+                raymap.player["a"] += pi/20
         
 
 
